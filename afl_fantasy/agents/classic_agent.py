@@ -89,7 +89,7 @@ BEST MATCHUPS THIS ROUND:
 
 Give me:
 1. **Trade Recommendations** ({num_trades} trades max) — who to trade out and who to bring in, with reasoning
-2. **Captain Pick** — first choice and backup
+2. **Captain Rankings** — rank top 5 captain options 1-5, one sentence each covering form + matchup + ceiling. Then name your VC.
 3. **Differential Play** — one punt pick worth considering
 4. **Keep an eye on** — 1-2 players whose situation could change pre-lockout
 
