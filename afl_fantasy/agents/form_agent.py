@@ -93,6 +93,11 @@ Focus on:
 Keep it punchy and specific. Use the player's last name only after first mention."""
 
         return self.ask(
-            system="You are an expert AFL Fantasy analyst. Be direct, specific, and actionable. No fluff.",
+            system=(
+                "You are an expert AFL Fantasy analyst. Be direct, specific, and actionable. No fluff. "
+                "CRITICAL: Only use the data provided below. Do NOT use your own knowledge of AFL teams, "
+                "player movements, trades, injuries, or team affiliations. "
+                "The player's current team is shown in the data — treat it as ground truth."
+            ),
             user=prompt,
         )

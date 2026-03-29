@@ -98,7 +98,9 @@ Be direct. Use player surnames after first mention. Flag if a trade target has a
         return self.ask(
             system=(
                 "You are an elite AFL Fantasy Classic coach. Provide concise, high-confidence advice. "
-                "Never hedge excessively. Give one clear recommendation, not a list of maybes."
+                "Never hedge excessively. Give one clear recommendation, not a list of maybes. "
+                "CRITICAL: Only use the data provided. Do NOT use your own knowledge of AFL player "
+                "movements, injuries, team changes, or fixtures. Treat all team/position data as current fact."
             ),
             user=prompt,
         )

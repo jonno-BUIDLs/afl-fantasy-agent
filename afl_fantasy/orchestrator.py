@@ -153,12 +153,38 @@ def run_pre_round_brief(num_trades: int = 2) -> None:
     classic_agent = ClassicAgent()
     strategy = classic_agent.recommend(players, paa_ratings, round_name, num_trades=num_trades)
 
-    # 5. KOL posts
+    # 5. KOL posts — build explicit context from data, not truncated strategy text
     kol = KOLAgent()
-    # Captain post
-    captain_tweet = kol.draft_post("captain", strategy[:500])
-    # Trade target post
-    trade_tweet = kol.draft_post("trade_target", strategy[:500])
+
+    # Captain context: top 3 by last3 avg
+    captain_pool = sorted(
+        [p for p in players if p.status == "playing" and p.games_played >= 2],
+        key=lambda p: p.last3_avg, reverse=True
+    )[:3]
+    captain_context = " | ".join(
+        f"{p.full_name} ({p.team}, L3={p.last3_avg}, Ceil={p.high_score})"
+        for p in captain_pool
+    )
+    captain_tweet = kol.draft_post("captain", f"Round: {round_name}\nTop captains: {captain_context}")
+
+    # Trade context: top price riser only (scoring well above BE)
+    price_risers = sorted(
+        [p for p in players if p.status == "playing" and p.break_even and p.last3_avg > p.break_even + 15],
+        key=lambda p: p.last3_avg - p.break_even, reverse=True
+    )[:1]
+    price_fallers = sorted(
+        [p for p in players if p.status == "playing" and p.break_even and p.last3_avg < p.break_even - 15],
+        key=lambda p: p.break_even - p.last3_avg, reverse=True
+    )[:1]
+
+    trade_context_parts = []
+    if price_risers:
+        r = price_risers[0]
+        trade_context_parts.append(f"BUY: {r.full_name} ({r.team}, {r.price_str}, L3={r.last3_avg}, BE={r.break_even})")
+    if price_fallers:
+        f_ = price_fallers[0]
+        trade_context_parts.append(f"SELL: {f_.full_name} ({f_.team}, {f_.price_str}, L3={f_.last3_avg}, BE={f_.break_even})")
+    trade_tweet = kol.draft_post("trade_target", f"Round: {round_name}\n" + "\n".join(trade_context_parts))
 
     # 6. Send to Telegram
     asyncio.run(_send_all(

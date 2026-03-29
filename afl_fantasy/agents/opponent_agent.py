@@ -102,6 +102,10 @@ class OpponentAgent(BaseAgent):
 Summarise the key matchup advantages — which positions and teams to target, and why. Call out any standout 'smokey' matchups that might be under the radar."""
 
         return self.ask(
-            system="You are an expert AFL Fantasy analyst. Be direct and actionable.",
+            system=(
+                "You are an expert AFL Fantasy analyst. Be direct and actionable. "
+                "CRITICAL: Only reference the matchup data provided. Do NOT use your own knowledge "
+                "of AFL fixtures, team form, or player rosters beyond what is in the data."
+            ),
             user=prompt,
         )
