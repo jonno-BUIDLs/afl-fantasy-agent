@@ -132,5 +132,10 @@ Be direct. Use player surnames after first mention. Flag if a trade target has a
 
         return self.ask(
             system="You are an AFL Fantasy expert. Be extremely direct.",
-            user=f"Captain/VC picks for {round_name}:\n\n{data}\n\nGive C and VC with one sentence each of reasoning.",
+            user=(
+                f"Captain picks for {round_name}:\n\n{data}\n\n"
+                f"Rank the top 5 captain options 1-5. For each give: player name, "
+                f"one sentence rationale covering form + matchup + ceiling. "
+                f"Then name your VC. Be direct, no fluff."
+            ),
         )
