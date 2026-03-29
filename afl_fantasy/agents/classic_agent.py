@@ -21,29 +21,41 @@ class ClassicAgent(BaseAgent):
         all_players: list[Player],
         paa_ratings: list[dict],
         round_name: str,
-        my_team: list[int] | None = None,  # player IDs I currently own
+        my_team: list[int] | None = None,
         num_trades: int = 2,
     ) -> str:
         """Full Classic strategy brief for the upcoming round."""
 
-        # Filter to playing, non-locked players
-        available = [p for p in all_players if p.status == "playing"]
+        # Filter to playing players with at least 2 games
+        available = [p for p in all_players if p.status == "playing" and p.games_played >= 2]
 
-        # Price risers: BE < last3_avg by 10+ (going up)
-        price_risers = [
+        # TRADE IN candidates:
+        # - Scoring well above BE (price rising)
+        # - Low ownership (<20%) — no point recommending what everyone already has
+        trade_ins = [
             p for p in available
-            if p.break_even and p.last3_avg > p.break_even + 10
+            if p.break_even
+            and p.last3_avg > p.break_even + 10
+            and (p.latest_ownership or 100) < 20
         ]
-        price_risers.sort(key=lambda p: p.last3_avg - (p.break_even or 0), reverse=True)
+        trade_ins.sort(key=lambda p: p.last3_avg - (p.break_even or 0), reverse=True)
 
-        # Price fallers: BE > last3_avg by 15+ (danger)
-        price_fallers = [
+        # DANGER FLAGS (coaches holding these should consider trading):
+        # - High ownership (>15%) — affects many coaches
+        # - Scoring well below BE (price falling)
+        # - Not a differential — if low ownership, less urgent for the field
+        danger_flags = [
             p for p in available
-            if p.break_even and p.last3_avg < p.break_even - 15
+            if p.break_even
+            and p.last3_avg < p.break_even - 15
+            and (p.latest_ownership or 0) > 15
         ]
-        price_fallers.sort(key=lambda p: (p.break_even or 0) - p.last3_avg, reverse=True)
+        danger_flags.sort(
+            key=lambda p: ((p.break_even or 0) - p.last3_avg) * ((p.latest_ownership or 0) / 100),
+            reverse=True
+        )
 
-        # Captain candidates: high avg + good matchup
+        # Captain candidates: top form
         captain_pool = sorted(available, key=lambda p: p.last3_avg, reverse=True)[:20]
 
         # Differentials: <5% ownership + avg > 90
@@ -72,11 +84,11 @@ class ClassicAgent(BaseAgent):
 
 I have {num_trades} trades available.
 
-PRICE RISERS (buy candidates — scoring above break-even):
-{chr(10).join(fmt_player(p) for p in price_risers[:10]) or "None identified"}
+TRADE IN TARGETS (low ownership <20%, scoring above break-even — genuinely underowned value):
+{chr(10).join(fmt_player(p) for p in trade_ins[:8]) or "None identified"}
 
-PRICE FALLERS (sell candidates — danger of price drop):
-{chr(10).join(fmt_player(p) for p in price_fallers[:8]) or "None identified"}
+DANGER FLAGS (high ownership >15% + scoring below break-even — coaches holding these are at risk):
+{chr(10).join(fmt_player(p) for p in danger_flags[:8]) or "None identified"}
 
 CAPTAIN CANDIDATES (top form):
 {chr(10).join(fmt_player(p) for p in captain_pool[:12])}
@@ -88,17 +100,20 @@ BEST MATCHUPS THIS ROUND:
 {matchup_str}
 
 Give me:
-1. **Trade Recommendations** ({num_trades} trades max) — who to trade out and who to bring in, with reasoning
-2. **Captain Rankings** — rank top 5 captain options 1-5, one sentence each covering form + matchup + ceiling. Then name your VC.
-3. **Differential Play** — one punt pick worth considering
-4. **Keep an eye on** — 1-2 players whose situation could change pre-lockout
+1. **Trade Flags** — based on the danger flags, call out which players coaches should be looking to move on and why (ownership + BE gap). Do NOT recommend specific trade-out targets (we don't know what players each coach has). Instead surface the risk signals so coaches can make their own call.
+2. **Trade In Targets** — from the trade in list, recommend the best 2-3 options coaches should be targeting. Reference ownership, BE gap, and matchup where relevant.
+3. **Captain Rankings** — rank top 5 captain options 1-5, one sentence each covering form + matchup + ceiling. Then name your VC.
+4. **Differential Play** — one punt pick worth considering
+5. **Keep an eye on** — 1-2 players whose situation could change pre-lockout
 
-Be direct. Use player surnames after first mention. Flag if a trade target has a suspect injury history or VC opportunity."""
+Be direct. Use player surnames after first mention."""
 
         return self.ask(
             system=(
-                "You are an elite AFL Fantasy Classic coach. Provide concise, high-confidence advice. "
-                "Never hedge excessively. Give one clear recommendation, not a list of maybes. "
+                "You are an elite AFL Fantasy Classic coach providing advice to a broad audience of coaches. "
+                "Never recommend specific trade pairings (trade X for Y) — you don't know what players each coach owns. "
+                "Instead flag risks (who to move on from) and opportunities (who to bring in) separately. "
+                "Be concise and high-confidence. "
                 "CRITICAL: Only use the data provided. Do NOT use your own knowledge of AFL player "
                 "movements, injuries, team changes, or fixtures. Treat all team/position data as current fact."
             ),

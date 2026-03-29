@@ -167,42 +167,49 @@ def run_pre_round_brief(num_trades: int = 2) -> None:
     )
     captain_tweet = kol.draft_post("captain", f"Round: {round_name}\nTop captains: {captain_context}")
 
-    # Trade context: price risers scoring well above BE, exclude players who haven't played
-    price_risers = sorted(
+    # Trade in: underowned (<20%) + scoring well above BE
+    trade_ins = sorted(
         [
             p for p in players
             if p.status == "playing"
             and p.games_played >= 2
             and p.break_even
             and p.last3_avg > p.break_even + 15
+            and (p.latest_ownership or 100) < 20
         ],
         key=lambda p: p.last3_avg - p.break_even, reverse=True
     )[:1]
-    price_fallers = sorted(
+
+    # Danger flag: high ownership (>15%) + scoring well below BE — affects many coaches
+    danger_flags = sorted(
         [
             p for p in players
             if p.status == "playing"
             and p.games_played >= 2
             and p.break_even
             and p.last3_avg < p.break_even - 15
+            and (p.latest_ownership or 0) > 15
         ],
-        key=lambda p: p.break_even - p.last3_avg, reverse=True
+        key=lambda p: ((p.break_even or 0) - p.last3_avg) * ((p.latest_ownership or 0) / 100),
+        reverse=True
     )[:1]
 
     trade_context_parts = []
-    if price_risers:
-        r = price_risers[0]
+    if trade_ins:
+        r = trade_ins[0]
         trade_context_parts.append(
-            f"BUY: {r.full_name} ({r.team}, {r.price_str}, L3={r.last3_avg}, BE={r.break_even}, "
-            f"{r.games_played} games played)"
+            f"TARGET: {r.full_name} ({r.team}, {r.price_str}) "
+            f"L3={r.last3_avg} BE={r.break_even} Own={r.latest_ownership}% — underowned and banking cash"
         )
-    if price_fallers:
-        f_ = price_fallers[0]
+    if danger_flags:
+        d = danger_flags[0]
         trade_context_parts.append(
-            f"SELL: {f_.full_name} ({f_.team}, {f_.price_str}, L3={f_.last3_avg}, BE={f_.break_even}, "
-            f"{f_.games_played} games played)"
+            f"DANGER FLAG: {d.full_name} ({d.team}, {d.price_str}) "
+            f"L3={d.last3_avg} BE={d.break_even} Own={d.latest_ownership}% — "
+            f"high ownership + {(d.break_even or 0) - d.last3_avg:.0f} pts below BE. Coaches holding this are exposed."
         )
-    trade_tweet = kol.draft_post("trade_target", f"Round: {round_name}\n" + "\n".join(trade_context_parts))
+    trade_context = f"Round: {round_name}\n" + "\n".join(trade_context_parts)
+    trade_tweet = kol.draft_post("trade_target", trade_context)
 
     # 6. Send to Telegram
     asyncio.run(_send_all(
