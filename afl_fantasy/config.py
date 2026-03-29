@@ -42,24 +42,24 @@ SCORING = {
 
 # Squad ID → Team name mapping (derived from players.json cross-reference)
 SQUADS = {
-    10: "Adelaide",
-    20: "Brisbane",
-    30: "Carlton",
-    40: "Collingwood",
-    50: "Essendon",
-    60: "Fremantle",
-    70: "Geelong",
-    80: "GWS",
-    90: "Gold Coast",
-    100: "Hawthorn",
-    110: "Melbourne",
-    120: "North Melbourne",
-    130: "Port Adelaide",
-    140: "Richmond",
-    150: "St Kilda",
-    160: "Sydney",
-    1000: "West Coast",
-    1010: "Western Bulldogs",
+    10: "Adelaide",       # Taylor Walker, Rory Laird ✓
+    20: "Brisbane",       # Dayne Zorko, Lachie Neale ✓
+    30: "Carlton",        # George Hewett, Zac Williams ✓
+    40: "Collingwood",    # Scott Pendlebury, Steele Sidebottom ✓
+    50: "Essendon",       # Peter Wright, Jade Gresham ✓
+    60: "Fremantle",      # Alex Pearce, Sam Switkowski ✓
+    70: "Geelong",        # Patrick Dangerfield, Tom Stewart ✓
+    80: "Hawthorn",       # Jack Gunston, Jarman Impey, Karl Amon ✓
+    90: "Melbourne",      # Jake Melksham, Steven May ✓
+    100: "North Melbourne",  # Aidan Corr ✓
+    110: "Port Adelaide", # Ollie Wines, Aliir Aliir ✓
+    120: "Richmond",      # Dion Prestia, Tom Lynch, Nick Vlastuin ✓
+    130: "St Kilda",      # Bradley Hill ✓
+    140: "Western Bulldogs",  # Tom Liberatore, Adam Treloar, Marcus Bontempelli ✓
+    150: "West Coast",    # Jamie Cripps, Elliot Yeo ✓
+    160: "Sydney",        # Dane Rampe, Harry Cunningham ✓
+    1000: "Gold Coast",   # Jarrod Witts, Sam Collins ✓
+    1010: "GWS",          # Stephen Coniglio, Lachie Whitfield ✓
 }
 
 SQUAD_NAME_TO_ID = {v: k for k, v in SQUADS.items()}
